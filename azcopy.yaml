@@ -1,0 +1,38 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: azcopy
+  labels:
+    name: azcopy
+spec:
+  template:
+    spec:
+      containers:
+      - name: backup
+        image: oliverlo.azurecr.io/azcopy/azcopy:03
+        command: ['sync.sh']
+        volumeMounts:
+          - name: nginx-persistent-storage
+            mountPath: /data
+        env:
+          - name: AZCOPY_SOURCE_PATH
+            valueFrom:
+              secretKeyRef:
+                name: azcopy
+                key: AZCOPY_SOURCE_PATH
+          - name: AZCOPY_DESTINATION_PATH
+            valueFrom:
+              secretKeyRef:
+                name: azcopy
+                key: AZCOPY_DESTINATION_PATH
+          - name: AZCOPY_DESTINATION_SAS
+            valueFrom:
+              secretKeyRef:
+                name: azcopy
+                key: AZCOPY_DESTINATION_SAS
+      restartPolicy: Never
+      volumes:
+        - name: nginx-persistent-storage
+          persistentVolumeClaim:
+            claimName: nginx-pv-data-claim
+  backoffLimit: 1
